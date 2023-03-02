@@ -2,19 +2,16 @@
 
 namespace ShadowFoxBotNet
 {
-    [Serializable]
     public class RiotGamesAPIException : Exception 
     {
-        public int errorCode { get; }
+        public ErrorCode Error { get; private set; }
         public RiotGamesAPIException() { }
 
-        public RiotGamesAPIException(string message)
-            : base(message) { }
+        public RiotGamesAPIException(string message) { }
 
-        public RiotGamesAPIException(string message, int errorCode)
-            : this(message) 
+        public RiotGamesAPIException(string message, ErrorCode error) : base(message)
         {
-            this.errorCode = errorCode;
+            Error = error;
         }
 
         public RiotGamesAPIException(string message, Exception inner)

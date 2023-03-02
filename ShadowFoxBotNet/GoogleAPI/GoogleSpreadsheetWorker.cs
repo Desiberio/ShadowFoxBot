@@ -91,29 +91,42 @@ namespace ShadowFoxBotNet
 
         public bool AddChampionsToSpreadsheet(string summonerName, string ownerName, Region region = Region.RU)
         {
-            RiotGamesAPI riotGamesAPI = new RiotGamesAPI();
-            string summonerID = riotGamesAPI.GetSummonerIdByName(summonerName, region).Result;
-            List<Champion> _7masteryChamps = riotGamesAPI.GetChampions7Mastery(summonerID, region).Result;
-
-            List<string> championsSpreadsheet = GetColumn($"{spreadsheetName}!B3:B200");
-            List<int> numberOfOccupiedCellsInRow = GetCellsNumberInRows($"{spreadsheetName}!D3:Z256", championsSpreadsheet.Count);
-
-            string fullName = summonerName;
-            if (summonerName == ownerName) fullName = summonerName;
-            else fullName = $"{summonerName} ({ownerName})";
-
-            foreach (Champion champion in _7masteryChamps)
+            try
             {
-                if (champion.wasAddedToGoogleDocs) continue;
-                int index = championsSpreadsheet.FindIndex(x => x == champion.name);
-                char column = (char)('D' + numberOfOccupiedCellsInRow[index]);
-                if (column > 'Z') throw new Exception("There are no more columns in table (looks like this method needs an upgrade).");
-                string cell = $"{spreadsheetName}!{column}{3 + index}";
-                AddEntries(cell, new List<object>() { fullName });
-                champion.wasAddedToGoogleDocs = true;
+                RiotGamesAPI riotGamesAPI = new RiotGamesAPI();
+                string summonerID = riotGamesAPI.GetSummonerIdByName(summonerName, region);
+                List<Champion> _7masteryChamps = riotGamesAPI.GetChampions7Mastery(summonerID, region);
+
+                List<string> championsSpreadsheet = GetColumn($"{spreadsheetName}!B3:B200");
+                List<int> numberOfOccupiedCellsInRow = GetCellsNumberInRows($"{spreadsheetName}!D3:Z256", championsSpreadsheet.Count);
+
+                string fullName = summonerName;
+                if (summonerName == ownerName) fullName = summonerName;
+                else fullName = $"{summonerName} ({ownerName})";
+
+                foreach (Champion champion in _7masteryChamps)
+                {
+                    if (champion.WasAddedToGoogleDocs) continue;
+
+                    int index = championsSpreadsheet.FindIndex(x => x == champion.Name);
+                    char column = (char)('D' + numberOfOccupiedCellsInRow[index]);
+                    if (column > 'Z') throw new Exception("There are no more columns in table (looks like this method needs an upgrade).");
+                    string cell = $"{spreadsheetName}!{column}{3 + index}";
+                    AddEntries(cell, new List<object>() { fullName });
+                    champion.WasAddedToGoogleDocs = true;
+                }
+
+                riotGamesAPI.SaveChampionsData(_7masteryChamps);
+                return true;
             }
-            riotGamesAPI.SaveChampionsData(_7masteryChamps);
-            return true;
+            catch (RiotGamesAPIException ex)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public List<string> GetColumn(string range)
